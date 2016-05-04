@@ -184,15 +184,14 @@ describe('Plugins.AlgebraicTypeFunctionMatching', function() {
       const expectedInstanceMethod:ObjC.Method = {
         belongsToProtocol:Maybe.Nothing<string>(),
         code: [
-          'switch (_subtype) {',
-          '  case _TestSubtypesSomeSubtype: {',
-          '    someSubtypeMatchHandler(_someSubtype_someString, _someSubtype_someUnsignedInteger);',
-          '    break;',
-          '  }',
-          '  case _TestSubtypesSingleAttributeSubtype: {',
-          '    singleAttributeSubtypeMatchHandler(_singleAttributeSubtype);',
-          '    break;',
-          '  }',
+          'if([_subtype isEqualToString:kSubtypeSomeSubtype]) {',
+          '  someSubtypeMatchHandler(_someSubtype_someString, _someSubtype_someUnsignedInteger);',
+          '}',
+          'else if([_subtype isEqualToString:kSubtypeSingleAttributeSubtype]) {',
+          '  singleAttributeSubtypeMatchHandler(_singleAttributeSubtype);',
+          '}',
+          'else {',
+          '  @throw([NSException exceptionWithName:@"InvalidSubtypeException" reason:@"nil or unknown subtype provided" userInfo:@{@"subtype": _subtype}]);',
           '}'
         ],
         comments: [],
@@ -222,7 +221,6 @@ describe('Plugins.AlgebraicTypeFunctionMatching', function() {
         ],
         returnType: Maybe.Nothing<ObjC.Type>()
       };
-
       expect(instanceMethods).toContain(expectedInstanceMethod);
     });
   });

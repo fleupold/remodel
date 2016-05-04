@@ -346,7 +346,7 @@ function returnStatementForAlgebraicSubtype(algebraicType:AlgebraicType.Type, su
 }
 
 function descriptionInstanceMethodCodeForAlgebraicType(algebraicType:AlgebraicType.Type):string[] {
-  return AlgebraicTypeUtils.codeForSwitchingOnSubtypeWithSubtypeMapper(algebraicType, AlgebraicTypeUtils.valueAccessorForInternalPropertyStoringSubtype(), returnStatementForAlgebraicSubtype);
+  return AlgebraicTypeUtils.codeForBranchesgOnSubtypeWithSubtypeMapper(algebraicType, AlgebraicTypeUtils.valueAccessorForInternalPropertyStoringSubtype(), returnStatementForAlgebraicSubtype);
 }
 
 function doesAlgebraicAttributeContainAnUnknownType(attribute:AlgebraicType.SubtypeAttribute):boolean {

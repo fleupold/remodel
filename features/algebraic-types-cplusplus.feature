@@ -49,15 +49,9 @@ Feature: Outputting ObjC++ Algebraic Types
       """
       #import "SimpleADT.h"
 
-      typedef NS_ENUM(NSUInteger, _SimpleADTSubtypes) {
-        _SimpleADTSubtypesFirstSubtype,
-        _SimpleADTSubtypesSomeRandomSubtype,
-        _SimpleADTSubtypesSecondSubtype
-      };
-
       @implementation SimpleADT
       {
-        _SimpleADTSubtypes _subtype;
+        NSString *_subtype;
         NSString *_firstSubtype_firstValue;
         NSUInteger _firstSubtype_secondValue;
         BOOL _secondSubtype_something;
@@ -66,7 +60,7 @@ Feature: Outputting ObjC++ Algebraic Types
       + (instancetype)firstSubtypeWithFirstValue:(NSString *)firstValue secondValue:(NSUInteger)secondValue
       {
         SimpleADT *object = [[SimpleADT alloc] init];
-        object->_subtype = _SimpleADTSubtypesFirstSubtype;
+        object->_subtype = kSubtypeFirstSubtype;
         object->_firstSubtype_firstValue = firstValue;
         object->_firstSubtype_secondValue = secondValue;
         return object;
@@ -75,7 +69,7 @@ Feature: Outputting ObjC++ Algebraic Types
       + (instancetype)secondSubtypeWithSomething:(BOOL)something
       {
         SimpleADT *object = [[SimpleADT alloc] init];
-        object->_subtype = _SimpleADTSubtypesSecondSubtype;
+        object->_subtype = kSubtypeSecondSubtype;
         object->_secondSubtype_something = something;
         return object;
       }
@@ -83,7 +77,7 @@ Feature: Outputting ObjC++ Algebraic Types
       + (instancetype)someRandomSubtype
       {
         SimpleADT *object = [[SimpleADT alloc] init];
-        object->_subtype = _SimpleADTSubtypesSomeRandomSubtype;
+        object->_subtype = kSubtypeSomeRandomSubtype;
         return object;
       }
 
@@ -94,25 +88,23 @@ Feature: Outputting ObjC++ Algebraic Types
 
       - (NSString *)description
       {
-        switch (_subtype) {
-          case _SimpleADTSubtypesFirstSubtype: {
-            return [NSString stringWithFormat:@"%@ - FirstSubtype \n\t firstValue: %@; \n\t secondValue: %tu; \n", [super description], _firstSubtype_firstValue, _firstSubtype_secondValue];
-            break;
-          }
-          case _SimpleADTSubtypesSomeRandomSubtype: {
-            return [NSString stringWithFormat:@"%@ - SomeRandomSubtype \n", [super description]];
-            break;
-          }
-          case _SimpleADTSubtypesSecondSubtype: {
-            return [NSString stringWithFormat:@"%@ - SecondSubtype \n\t something: %@; \n", [super description], _secondSubtype_something ? @"YES" : @"NO"];
-            break;
-          }
+        if([_subtype isEqualToString:kSubtypeFirstSubtype]) {
+          return [NSString stringWithFormat:@"%@ - FirstSubtype \n\t firstValue: %@; \n\t secondValue: %tu; \n", [super description], _firstSubtype_firstValue, _firstSubtype_secondValue];
+        }
+        else if([_subtype isEqualToString:kSubtypeSomeRandomSubtype]) {
+          return [NSString stringWithFormat:@"%@ - SomeRandomSubtype \n", [super description]];
+        }
+        else if([_subtype isEqualToString:kSubtypeSecondSubtype]) {
+          return [NSString stringWithFormat:@"%@ - SecondSubtype \n\t something: %@; \n", [super description], _secondSubtype_something ? @"YES" : @"NO"];
+        }
+        else {
+          @throw([NSException exceptionWithName:@"InvalidSubtypeException" reason:@"nil or unknown subtype provided" userInfo:@{@"subtype": _subtype}]);
         }
       }
 
       - (NSUInteger)hash
       {
-        NSUInteger subhashes[] = {_subtype, [_firstSubtype_firstValue hash], _firstSubtype_secondValue, (NSUInteger)_secondSubtype_something};
+        NSUInteger subhashes[] = {[_subtype hash], [_firstSubtype_firstValue hash], _firstSubtype_secondValue, (NSUInteger)_secondSubtype_something};
         NSUInteger result = subhashes[0];
         for (int ii = 1; ii < 4; ++ii) {
           unsigned long long base = (((unsigned long long)result) << 32 | subhashes[ii]);
@@ -135,27 +127,25 @@ Feature: Outputting ObjC++ Algebraic Types
           return NO;
         }
         return
-          _subtype == object->_subtype &&
           _firstSubtype_secondValue == object->_firstSubtype_secondValue &&
           _secondSubtype_something == object->_secondSubtype_something &&
+          (_subtype == object->_subtype ? YES : [_subtype isEqual:object->_subtype]) &&
           (_firstSubtype_firstValue == object->_firstSubtype_firstValue ? YES : [_firstSubtype_firstValue isEqual:object->_firstSubtype_firstValue]);
       }
 
       - (void)matchFirstSubtype:(SimpleADTFirstSubtypeMatchHandler)firstSubtypeMatchHandler someRandomSubtype:(SimpleADTSomeRandomSubtypeMatchHandler)someRandomSubtypeMatchHandler secondSubtype:(SimpleADTSecondSubtypeMatchHandler)secondSubtypeMatchHandler
       {
-        switch (_subtype) {
-          case _SimpleADTSubtypesFirstSubtype: {
-            firstSubtypeMatchHandler(_firstSubtype_firstValue, _firstSubtype_secondValue);
-            break;
-          }
-          case _SimpleADTSubtypesSomeRandomSubtype: {
-            someRandomSubtypeMatchHandler();
-            break;
-          }
-          case _SimpleADTSubtypesSecondSubtype: {
-            secondSubtypeMatchHandler(_secondSubtype_something);
-            break;
-          }
+        if([_subtype isEqualToString:kSubtypeFirstSubtype]) {
+          firstSubtypeMatchHandler(_firstSubtype_firstValue, _firstSubtype_secondValue);
+        }
+        else if([_subtype isEqualToString:kSubtypeSomeRandomSubtype]) {
+          someRandomSubtypeMatchHandler();
+        }
+        else if([_subtype isEqualToString:kSubtypeSecondSubtype]) {
+          secondSubtypeMatchHandler(_secondSubtype_something);
+        }
+        else {
+          @throw([NSException exceptionWithName:@"InvalidSubtypeException" reason:@"nil or unknown subtype provided" userInfo:@{@"subtype": _subtype}]);
         }
       }
 

@@ -75,6 +75,19 @@ function staticConstantForAttribute(attribute:CodeableAttribute):ObjC.Constant {
   };
 }
 
+function staticConstantForSubtype(subtype:AlgebraicType.Subtype):ObjC.Constant {
+  return {
+    type: {
+      name:'NSString',
+      reference:'NSString *'
+    },
+    comments: [],
+    name: AlgebraicTypeUtils.ConstantNameForSubtype(subtype),
+    value: constantValueForAttributeName('SUBTYPE_' + AlgebraicTypeUtils.subtypeNameFromSubtype(subtype)),
+    memorySemantic: ObjC.MemorySemantic.UnsafeUnretained()
+  };
+}
+
 function initBlockWithInternalCode(internalCode:string[]):string[] {
   const returnStatement:string = 'return self;';
   return ['if ((self = [super init])) {'].concat(internalCode.map(StringUtils.indent(2))).concat('}').concat(returnStatement);
@@ -303,8 +316,8 @@ function codeableAttributeForSubtypePropertyOfAlgebraicType():CodeableAttribute 
     valueAccessor: '_subtype',
     constantName: nameOfConstantForValueName('subtype'),
     type: {
-      name: 'NSUInteger',
-      reference: 'NSUInteger'
+      name: 'NSObject',
+      reference: 'NSObject'
     }
   };
 }
@@ -337,8 +350,8 @@ function decodeStatementsForAlgebraicSubtype(algebraicType:AlgebraicType.Type, s
 
 function decodeCodeForAlgebraicType(algebraicType:AlgebraicType.Type):string[] {
   const codeableAttributeForSubtypeProperty:CodeableAttribute = codeableAttributeForSubtypePropertyOfAlgebraicType();
-  const switchStatement:string[] = AlgebraicTypeUtils.codeForSwitchingOnSubtypeWithSubtypeMapper(algebraicType, codeableAttributeForSubtypeProperty.valueAccessor, decodeStatementsForAlgebraicSubtype);
-  return [decodeStatementForAttribute(codeableAttributeForSubtypeProperty)].concat(switchStatement);
+  const ifStatement:string[] = AlgebraicTypeUtils.codeForBranchesgOnSubtypeWithSubtypeMapper(algebraicType, codeableAttributeForSubtypeProperty.valueAccessor, decodeStatementsForAlgebraicSubtype);
+  return [decodeStatementForAttribute(codeableAttributeForSubtypeProperty)].concat(ifStatement);
 }
 
 function encodeStatementForAlgebraicSubtypeAttribute(subtype:AlgebraicType.Subtype, attribute:AlgebraicType.SubtypeAttribute):string {
@@ -352,8 +365,8 @@ function encodeStatementsForAlgebraicSubtype(algebraicType:AlgebraicType.Type, s
 
 function encodeCodeForAlgebraicType(algebraicType:AlgebraicType.Type):string[] {
   const codeableAttributeForSubtypeProperty:CodeableAttribute = codeableAttributeForSubtypePropertyOfAlgebraicType();
-  const switchStatement:string[] = AlgebraicTypeUtils.codeForSwitchingOnSubtypeWithSubtypeMapper(algebraicType, codeableAttributeForSubtypeProperty.valueAccessor, encodeStatementsForAlgebraicSubtype);
-  return [encodeStatementForAttribute(codeableAttributeForSubtypeProperty)].concat(switchStatement);
+  const ifStatement:string[] = AlgebraicTypeUtils.codeForBranchesgOnSubtypeWithSubtypeMapper(algebraicType, codeableAttributeForSubtypeProperty.valueAccessor, encodeStatementsForAlgebraicSubtype);
+  return [encodeStatementForAttribute(codeableAttributeForSubtypeProperty)].concat(ifStatement);
 }
 
 function doesAlgebraicAttributeContainAnUnknownType(attribute:AlgebraicType.SubtypeAttribute):boolean {
@@ -436,7 +449,8 @@ export function createAlgebraicTypePlugin():AlgebraicType.Plugin {
       const codeableAttributeForSubtypeProperty:CodeableAttribute = codeableAttributeForSubtypePropertyOfAlgebraicType();
       const codeableAttributeForSubtypeAttributes:CodeableAttribute[] = AlgebraicTypeUtils.mapAttributesWithSubtypeFromSubtypes(algebraicType.subtypes, codeableAttributeForAlgebraicSubtypeAttribute);
       const codeableAttributes:CodeableAttribute[] = [codeableAttributeForSubtypeProperty].concat(codeableAttributeForSubtypeAttributes);
-      return codeableAttributes.map(staticConstantForAttribute);
+      const algebraicSubtypes:ObjC.Constant[] = algebraicType.subtypes.map(staticConstantForSubtype);
+      return codeableAttributes.map(staticConstantForAttribute).concat(algebraicSubtypes);
     },
     validationErrors: function(algebraicType:AlgebraicType.Type):Error.Error[] {
       const unknownTypeErrors = AlgebraicTypeUtils.allAttributesFromSubtypes(algebraicType.subtypes).filter(doesAlgebraicAttributeContainAnUnknownType).map(FunctionUtils.pApplyf2(algebraicType, algebraicAttributeToUnknownTypeError));

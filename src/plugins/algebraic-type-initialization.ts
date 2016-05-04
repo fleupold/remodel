@@ -94,7 +94,7 @@ function keywordsForSubtype(subtype:AlgebraicType.Subtype):ObjC.Keyword[] {
 function initializationClassMethodForSubtype(algebraicType:AlgebraicType.Type, subtype:AlgebraicType.Subtype):ObjC.Method {
   const openingCode:string[] = [
     algebraicType.name + ' *' + nameOfObjectWithinInitializer() + ' = [[' + algebraicType.name + ' alloc] init];',
-    nameOfObjectWithinInitializer() + '->' + AlgebraicTypeUtils.valueAccessorForInternalPropertyStoringSubtype() + ' = ' + AlgebraicTypeUtils.EnumerationValueNameForSubtype(algebraicType, subtype) + ';'
+    nameOfObjectWithinInitializer() + '->' + AlgebraicTypeUtils.valueAccessorForInternalPropertyStoringSubtype() + ' = ' + AlgebraicTypeUtils.ConstantNameForSubtype(subtype) + ';'
   ];
   const setterStatements:string[] = AlgebraicTypeUtils.attributesFromSubtype(subtype).map(FunctionUtils.pApplyf2(subtype, internalValueSettingCodeForAttribute));
 
@@ -118,14 +118,13 @@ function internalImportForFileWithName(name:string):ObjC.Import {
   };
 }
 
-function internalPropertyForEnumeration(algebraicType:AlgebraicType.Type):ObjC.Property {
-  const enumerationName:string = AlgebraicTypeUtils.EnumerationNameForAlgebraicType(algebraicType);
+function internalPropertyStoringSubtype(algebraicType:AlgebraicType.Type):ObjC.Property {
   return {
     name:AlgebraicTypeUtils.nameForInternalPropertyStoringSubtype(),
     comments: [],
     returnType: {
-      name:enumerationName,
-      reference:enumerationName
+      name:'NSString',
+      reference:'NSString *'
     },
     modifiers:[],
     access: ObjC.PropertyAccess.Private()
@@ -145,8 +144,21 @@ function internalPropertyFromAttribute(subtype:AlgebraicType.Subtype, attribute:
   };
 }
 
+function subtypePropertyFromSubtype(subtype:AlgebraicType.Subtype) {
+  return {
+    name:'deineMa',
+    comments: [],
+    returnType: {
+      name:'NSString',
+      reference:'NSString *'
+    },
+    modifiers:[],
+    access: ObjC.PropertyAccess.Private()
+  }
+}
+
 function internalPropertiesForImplementationOfAlgebraicType(algebraicType:AlgebraicType.Type):ObjC.Property[] {
-  const enumerationProperty:ObjC.Property = internalPropertyForEnumeration(algebraicType);
+  const enumerationProperty:ObjC.Property = internalPropertyStoringSubtype(algebraicType);
   const attributeProperties:ObjC.Property[] = AlgebraicTypeUtils.mapAttributesWithSubtypeFromSubtypes(algebraicType.subtypes, internalPropertyFromAttribute);
   return [enumerationProperty].concat(attributeProperties);
 }
@@ -174,16 +186,6 @@ function importForAttribute(objectLibrary:Maybe.Maybe<string>, isPublic:boolean,
 
 function forwardDeclarationForAttribute(objectLibrary:Maybe.Maybe<string>, attribute:AlgebraicType.SubtypeAttribute): ObjC.ForwardDeclaration {
   return ObjC.ForwardDeclaration.ForwardClassDeclaration(attribute.type.name);
-}
-
-function enumerationForSubtypesOfAlgebraicType(algebraicType:AlgebraicType.Type):ObjC.Enumeration {
-  return {
-    name: AlgebraicTypeUtils.EnumerationNameForAlgebraicType(algebraicType),
-    underlyingType: 'NSUInteger',
-    values: algebraicType.subtypes.map(FunctionUtils.pApplyf2(algebraicType, AlgebraicTypeUtils.EnumerationValueNameForSubtype)),
-    isPublic: false,
-    comments: []
-  };
 }
 
 interface ValidationErrorReductionTracker {
@@ -219,7 +221,7 @@ export function createAlgebraicTypePlugin():AlgebraicType.Plugin {
       return algebraicType.subtypes.map(FunctionUtils.pApplyf2(algebraicType, initializationClassMethodForSubtype));
     },
     enumerations: function(algebraicType:AlgebraicType.Type):ObjC.Enumeration[] {
-      return [enumerationForSubtypesOfAlgebraicType(algebraicType)];
+      return [];
     },
     fileTransformation: function(request:FileWriter.Request):FileWriter.Request {
       return request;

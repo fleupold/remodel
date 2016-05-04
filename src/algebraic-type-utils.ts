@@ -85,29 +85,30 @@ export function valueAccessorForInternalPropertyForAttribute(subtype:AlgebraicTy
   return '_' + nameOfInternalPropertyForAttribute(subtype, attribute);
 }
 
-export function EnumerationNameForAlgebraicType(algebraicType:AlgebraicType.Type):string {
-  return '_' + algebraicType.name + 'Subtypes';
+export function ConstantNameForSubtype(subtype:AlgebraicType.Subtype):string {
+  return 'kSubtype' + subtypeNameFromSubtype(subtype);
 }
 
-export function EnumerationValueNameForSubtype(algebraicType:AlgebraicType.Type, subtype:AlgebraicType.Subtype):string {
-  return EnumerationNameForAlgebraicType(algebraicType) + subtypeNameFromSubtype(subtype);
+export function ConstantValueForSubtype(subtype:AlgebraicType.Subtype):string {
+  return '@"SUBTYPE_' + subtypeNameFromSubtype(subtype) + '"';
 }
 
-function caseStatementForSubtypeWithSubtypeMapper(algebraicType:AlgebraicType.Type, subtypeMapper:(algebraicType:AlgebraicType.Type, subtype:AlgebraicType.Subtype) => string[], soFar:string[], subtype:AlgebraicType.Subtype):string[] {
+export function codeForSubtypeBranchesWithSubtypeMapper(algebraicType:AlgebraicType.Type, subtypeValueAccessor:string, subtypeMapper:(algebraicType:AlgebraicType.Type, subtype:AlgebraicType.Subtype) => string[], soFar:string[], subtype:AlgebraicType.Subtype):string[] {
   const internalCode:string[] = subtypeMapper(algebraicType, subtype);
-  const code:string[] = ['case ' + EnumerationValueNameForSubtype(algebraicType, subtype) + ': {'].concat(internalCode.map(StringUtils.indent(2))).concat(['  break;', '}']);
+  const code:string[] = [(soFar.length ? 'else if([' : 'if([') + subtypeValueAccessor + ' isEqualToString:' + ConstantNameForSubtype(subtype) + ']) {'].concat(internalCode.map(StringUtils.indent(2))).concat(['}']);
   return soFar.concat(code);
 }
 
-function p2Applyf4<T,U,V,W,X>(firstVal:T, secondVal:U, f:(a:T, b:U, c:V, d:W) => X):(c:V, d:W) => X {
-  return function(c:V, d:W):X {
-    return f(firstVal, secondVal, c, d);
+function p3Applyf5<T,U,V,W,X,Y>(firstVal:T, secondVal:U, thirdValue:V, f:(a:T, b:U, c:V, d:W, e:X) => Y):(d:W, e:X) => Y {
+  return function(d:W, e:X):Y {
+    return f(firstVal, secondVal, thirdValue, d, e);
   };
 }
 
-export function codeForSwitchingOnSubtypeWithSubtypeMapper(algebraicType:AlgebraicType.Type, subtypeValueAccessor:string, subtypeMapper:(algebraicType:AlgebraicType.Type, subtype:AlgebraicType.Subtype) => string[]):string[] {
-  const caseStatements:string[] = algebraicType.subtypes.reduce(p2Applyf4(algebraicType, subtypeMapper, caseStatementForSubtypeWithSubtypeMapper), []);
-  return ['switch (' + subtypeValueAccessor + ') {'].concat(caseStatements.map(StringUtils.indent(2))).concat('}');
+export function codeForBranchesgOnSubtypeWithSubtypeMapper(algebraicType:AlgebraicType.Type, subtypeValueAccessor:string, subtypeMapper:(algebraicType:AlgebraicType.Type, subtype:AlgebraicType.Subtype) => string[]):string[] {
+  const subtypeBranches:string[] = algebraicType.subtypes.reduce(p3Applyf5(algebraicType, subtypeValueAccessor, subtypeMapper, codeForSubtypeBranchesWithSubtypeMapper), []);
+  const failureCase:string[] = ['else {', StringUtils.indent(2)('@throw([NSException exceptionWithName:@"InvalidSubtypeException" reason:@"nil or unknown subtype provided" userInfo:@{@"subtype": _subtype}]);'), '}'];
+  return subtypeBranches.concat(failureCase);
 }
 
 function blockTypeNameForSubtype(algebraicType:AlgebraicType.Type, subtype:AlgebraicType.Subtype):string {

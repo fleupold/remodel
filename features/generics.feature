@@ -125,14 +125,9 @@ Feature: Outputting Objects With Generic Types
       """
       #import "SimpleADT.h"
 
-      typedef NS_ENUM(NSUInteger, _SimpleADTSubtypes) {
-        _SimpleADTSubtypesFirstSubtype,
-        _SimpleADTSubtypesSomeAttributeSubtype
-      };
-
       @implementation SimpleADT
       {
-        _SimpleADTSubtypes _subtype;
+        NSString *_subtype;
         NSDictionary<NSString *, NSNumber *> *_firstSubtype_namesToAges;
         NSDictionary<NSString *, NSString *> *_someAttributeSubtype;
       }
@@ -140,7 +135,7 @@ Feature: Outputting Objects With Generic Types
       + (instancetype)firstSubtypeWithNamesToAges:(NSDictionary<NSString *, NSNumber *> *)namesToAges
       {
         SimpleADT *object = [[SimpleADT alloc] init];
-        object->_subtype = _SimpleADTSubtypesFirstSubtype;
+        object->_subtype = kSubtypeFirstSubtype;
         object->_firstSubtype_namesToAges = namesToAges;
         return object;
       }
@@ -148,7 +143,7 @@ Feature: Outputting Objects With Generic Types
       + (instancetype)someAttributeSubtype:(NSDictionary<NSString *, NSString *> *)someAttributeSubtype
       {
         SimpleADT *object = [[SimpleADT alloc] init];
-        object->_subtype = _SimpleADTSubtypesSomeAttributeSubtype;
+        object->_subtype = kSubtypeSomeAttributeSubtype;
         object->_someAttributeSubtype = someAttributeSubtype;
         return object;
       }
@@ -160,21 +155,20 @@ Feature: Outputting Objects With Generic Types
 
       - (NSString *)description
       {
-        switch (_subtype) {
-          case _SimpleADTSubtypesFirstSubtype: {
-            return [NSString stringWithFormat:@"%@ - FirstSubtype \n\t namesToAges: %@; \n", [super description], _firstSubtype_namesToAges];
-            break;
-          }
-          case _SimpleADTSubtypesSomeAttributeSubtype: {
-            return [NSString stringWithFormat:@"%@ - \n\t someAttributeSubtype: %@; \n", [super description], _someAttributeSubtype];
-            break;
-          }
+        if([_subtype isEqualToString:kSubtypeFirstSubtype]) {
+          return [NSString stringWithFormat:@"%@ - FirstSubtype \n\t namesToAges: %@; \n", [super description], _firstSubtype_namesToAges];
+        }
+        else if([_subtype isEqualToString:kSubtypeSomeAttributeSubtype]) {
+          return [NSString stringWithFormat:@"%@ - \n\t someAttributeSubtype: %@; \n", [super description], _someAttributeSubtype];
+        }
+        else {
+          @throw([NSException exceptionWithName:@"InvalidSubtypeException" reason:@"nil or unknown subtype provided" userInfo:@{@"subtype": _subtype}]);
         }
       }
 
       - (NSUInteger)hash
       {
-        NSUInteger subhashes[] = {_subtype, [_firstSubtype_namesToAges hash], [_someAttributeSubtype hash]};
+        NSUInteger subhashes[] = {[_subtype hash], [_firstSubtype_namesToAges hash], [_someAttributeSubtype hash]};
         NSUInteger result = subhashes[0];
         for (int ii = 1; ii < 3; ++ii) {
           unsigned long long base = (((unsigned long long)result) << 32 | subhashes[ii]);
@@ -197,22 +191,21 @@ Feature: Outputting Objects With Generic Types
           return NO;
         }
         return
-          _subtype == object->_subtype &&
+          (_subtype == object->_subtype ? YES : [_subtype isEqual:object->_subtype]) &&
           (_firstSubtype_namesToAges == object->_firstSubtype_namesToAges ? YES : [_firstSubtype_namesToAges isEqual:object->_firstSubtype_namesToAges]) &&
           (_someAttributeSubtype == object->_someAttributeSubtype ? YES : [_someAttributeSubtype isEqual:object->_someAttributeSubtype]);
       }
 
       - (void)matchFirstSubtype:(SimpleADTFirstSubtypeMatchHandler)firstSubtypeMatchHandler someAttributeSubtype:(SimpleADTSomeAttributeSubtypeMatchHandler)someAttributeSubtypeMatchHandler
       {
-        switch (_subtype) {
-          case _SimpleADTSubtypesFirstSubtype: {
-            firstSubtypeMatchHandler(_firstSubtype_namesToAges);
-            break;
-          }
-          case _SimpleADTSubtypesSomeAttributeSubtype: {
-            someAttributeSubtypeMatchHandler(_someAttributeSubtype);
-            break;
-          }
+        if([_subtype isEqualToString:kSubtypeFirstSubtype]) {
+          firstSubtypeMatchHandler(_firstSubtype_namesToAges);
+        }
+        else if([_subtype isEqualToString:kSubtypeSomeAttributeSubtype]) {
+          someAttributeSubtypeMatchHandler(_someAttributeSubtype);
+        }
+        else {
+          @throw([NSException exceptionWithName:@"InvalidSubtypeException" reason:@"nil or unknown subtype provided" userInfo:@{@"subtype": _subtype}]);
         }
       }
 

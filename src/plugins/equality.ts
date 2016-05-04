@@ -1032,8 +1032,8 @@ function generatedTypeEqualityInformationForGenerationGroup(generationGroup:Type
 
 function generatedTypeEqualityInformationForSubtypeAttributeForAlgebraicType(algebraicType:AlgebraicType.Type):GeneratedTypeEqualityInformation {
   const type:ObjC.Type = {
-    name: 'NSUInteger',
-    reference: 'NSUInteger'
+    name: 'NSObject',
+    reference: 'NSObject'
   };
   const generationGroup:TypeEqualityGenerationGroup = generationGroupForType(type);
   return generatedTypeEqualityInformationForGenerationGroup(generationGroup, AlgebraicTypeUtils.valueAccessorForInternalPropertyStoringSubtype());

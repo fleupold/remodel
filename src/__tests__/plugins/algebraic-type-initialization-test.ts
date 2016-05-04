@@ -219,7 +219,7 @@ describe('AlgebraicTypePlugins.AlgebraicTypeInitialization', function() {
           belongsToProtocol:Maybe.Nothing<string>(),
           code: [
             'Foo *object = [[Foo alloc] init];',
-            'object->_subtype = _FooSubtypesSomeSubtype;',
+            'object->_subtype = kSubtypeSomeSubtype;',
             'return object;'
           ],
           comments: [],
@@ -301,7 +301,7 @@ describe('AlgebraicTypePlugins.AlgebraicTypeInitialization', function() {
           belongsToProtocol:Maybe.Nothing<string>(),
           code: [
             'Test *object = [[Test alloc] init];',
-            'object->_subtype = _TestSubtypesSomeSubtype;',
+            'object->_subtype = kSubtypeSomeSubtype;',
             'object->_someSubtype_someString = someString;',
             'object->_someSubtype_someUnsignedInteger = someUnsignedInteger;',
             'return object;'
@@ -340,7 +340,7 @@ describe('AlgebraicTypePlugins.AlgebraicTypeInitialization', function() {
           belongsToProtocol:Maybe.Nothing<string>(),
           code: [
             'Test *object = [[Test alloc] init];',
-            'object->_subtype = _TestSubtypesSingleAttributeSubtype;',
+            'object->_subtype = kSubtypeSingleAttributeSubtype;',
             'object->_singleAttributeSubtype = singleAttributeSubtype;',
             'return object;'
           ],
@@ -432,8 +432,8 @@ describe('AlgebraicTypePlugins.AlgebraicTypeInitialization', function() {
           comments:[],
           name:'subtype',
           returnType: {
-            name:'_TestSubtypes',
-            reference: '_TestSubtypes'
+            name:'NSString',
+            reference: 'NSString *'
           },
           modifiers:[],
           access: ObjC.PropertyAccess.Private()
@@ -470,77 +470,6 @@ describe('AlgebraicTypePlugins.AlgebraicTypeInitialization', function() {
         }
       ];
       expect(internalProperties).toEqualJSON(expectedInternalProperties);
-    });
-  });
-
-  describe('#enumerations', function() {
-    it('returns an enumeration for its subtypes', function() {
-      const algebraicType:AlgebraicType.Type = {
-        name: 'Foo',
-        includes: [],
-        excludes: [],
-        typeLookups:[],
-        libraryName: Maybe.Nothing<string>(),
-        comments: [],
-        subtypes: [
-          AlgebraicType.Subtype.NamedAttributeCollectionDefinition(
-          {
-            name: 'SomeSubtype',
-            comments: [],
-            attributes: [
-              {
-                name: 'someString',
-                comments: [],
-                nullability:ObjC.Nullability.Inherited(),
-                type: {
-                  name: 'NSString',
-                  reference: 'NSString *',
-                  libraryTypeIsDefinedIn: Maybe.Nothing<string>(),
-                  fileTypeIsDefinedIn: Maybe.Nothing<string>(),
-                  underlyingType: Maybe.Just<string>('NSObject')
-                }
-              },
-              {
-                name: 'someUnsignedInteger',
-                comments: [],
-                nullability:ObjC.Nullability.Inherited(),
-                type: {
-                  name: 'NSUInteger',
-                  reference: 'NSUInteger',
-                  libraryTypeIsDefinedIn: Maybe.Nothing<string>(),
-                  fileTypeIsDefinedIn: Maybe.Nothing<string>(),
-                  underlyingType: Maybe.Nothing<string>()
-                }
-              }
-            ]
-          }),
-          AlgebraicType.Subtype.SingleAttributeSubtypeDefinition(
-          {
-            name: 'singleAttributeSubtype',
-            comments: [],
-            nullability:ObjC.Nullability.Inherited(),
-            type: {
-              name: 'SingleAttributeType',
-              reference: 'SingleAttributeType *',
-              libraryTypeIsDefinedIn: Maybe.Nothing<string>(),
-              fileTypeIsDefinedIn: Maybe.Nothing<string>(),
-              underlyingType: Maybe.Just<string>('NSObject')
-            }
-          })
-        ]
-      };
-
-      const enumerations = AlgebraicTypePlugin.enumerations(algebraicType);
-
-      const expectedEnumeration:ObjC.Enumeration = {
-        name: '_FooSubtypes',
-        underlyingType: 'NSUInteger',
-        values: ['_FooSubtypesSomeSubtype', '_FooSubtypesSingleAttributeSubtype'],
-        isPublic: false,
-        comments: []
-      };
-
-      expect(enumerations).toContain(expectedEnumeration);
     });
   });
 

@@ -32,7 +32,7 @@ function blockInvocationForSubtype(algebraicType:AlgebraicType.Type, subtype:Alg
 }
 
 function matcherCodeForAlgebraicType(algebraicType:AlgebraicType.Type):string[] {
-  return AlgebraicTypeUtils.codeForSwitchingOnSubtypeWithSubtypeMapper(algebraicType, AlgebraicTypeUtils.valueAccessorForInternalPropertyStoringSubtype(), blockInvocationForSubtype);
+  return AlgebraicTypeUtils.codeForBranchesgOnSubtypeWithSubtypeMapper(algebraicType, AlgebraicTypeUtils.valueAccessorForInternalPropertyStoringSubtype(), blockInvocationForSubtype);
 }
 
 function instanceMethodForMatchingSubtypesOfAlgebraicType(algebraicType:AlgebraicType.Type):ObjC.Method {

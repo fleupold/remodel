@@ -745,17 +745,16 @@ describe('AlgebraicTypePlugins.Coding', function() {
           belongsToProtocol:Maybe.Just<string>('NSCoding'),
           code: [
             'if ((self = [super init])) {',
-            '  _subtype = [aDecoder decodeIntegerForKey:kSubtypeKey];',
-            '  switch (_subtype) {',
-            '    case _TestSubtypesSomeSubtype: {',
-            '      _someSubtype_someString = [aDecoder decodeObjectForKey:kSomeSubtypeSomeStringKey];',
-            '      _someSubtype_someUnsignedInteger = [aDecoder decodeIntegerForKey:kSomeSubtypeSomeUnsignedIntegerKey];',
-            '      break;',
-            '    }',
-            '    case _TestSubtypesCoolSingleAttributeSubtype: {',
-            '      _coolSingleAttributeSubtype = [aDecoder decodeObjectForKey:kCoolSingleAttributeSubtypeKey];',
-            '      break;',
-            '    }',
+            '  _subtype = [aDecoder decodeObjectForKey:kSubtypeKey];',
+            '  if([_subtype isEqualToString:kSubtypeSomeSubtype]) {',
+            '    _someSubtype_someString = [aDecoder decodeObjectForKey:kSomeSubtypeSomeStringKey];',
+            '    _someSubtype_someUnsignedInteger = [aDecoder decodeIntegerForKey:kSomeSubtypeSomeUnsignedIntegerKey];',
+            '  }',
+            '  else if([_subtype isEqualToString:kSubtypeCoolSingleAttributeSubtype]) {',
+            '    _coolSingleAttributeSubtype = [aDecoder decodeObjectForKey:kCoolSingleAttributeSubtypeKey];',
+            '  }',
+            '  else {',
+            '    @throw([NSException exceptionWithName:@"InvalidSubtypeException" reason:@"nil or unknown subtype provided" userInfo:@{@"subtype": _subtype}]);',
             '  }',
             '}',
             'return self;'
@@ -782,17 +781,16 @@ describe('AlgebraicTypePlugins.Coding', function() {
         {
           belongsToProtocol:Maybe.Just<string>('NSCoding'),
           code: [
-            '[aCoder encodeInteger:_subtype forKey:kSubtypeKey];',
-            'switch (_subtype) {',
-            '  case _TestSubtypesSomeSubtype: {',
-            '    [aCoder encodeObject:_someSubtype_someString forKey:kSomeSubtypeSomeStringKey];',
-            '    [aCoder encodeInteger:_someSubtype_someUnsignedInteger forKey:kSomeSubtypeSomeUnsignedIntegerKey];',
-            '    break;',
-            '  }',
-            '  case _TestSubtypesCoolSingleAttributeSubtype: {',
-            '    [aCoder encodeObject:_coolSingleAttributeSubtype forKey:kCoolSingleAttributeSubtypeKey];',
-            '    break;',
-            '  }',
+            '[aCoder encodeObject:_subtype forKey:kSubtypeKey];',
+            'if([_subtype isEqualToString:kSubtypeSomeSubtype]) {',
+            '  [aCoder encodeObject:_someSubtype_someString forKey:kSomeSubtypeSomeStringKey];',
+            '  [aCoder encodeInteger:_someSubtype_someUnsignedInteger forKey:kSomeSubtypeSomeUnsignedIntegerKey];',
+            '}',
+            'else if([_subtype isEqualToString:kSubtypeCoolSingleAttributeSubtype]) {',
+            '  [aCoder encodeObject:_coolSingleAttributeSubtype forKey:kCoolSingleAttributeSubtypeKey];',
+            '}',
+            'else {',
+            '  @throw([NSException exceptionWithName:@"InvalidSubtypeException" reason:@"nil or unknown subtype provided" userInfo:@{@"subtype": _subtype}]);',
             '}'
           ],
           comments: [],
@@ -916,9 +914,28 @@ describe('AlgebraicTypePlugins.Coding', function() {
           name: 'kCoolSingleAttributeSubtypeKey',
           value: '@"COOL_SINGLE_ATTRIBUTE_SUBTYPE"',
           memorySemantic: ObjC.MemorySemantic.UnsafeUnretained()
+        },
+        {
+          comments: [],
+          type: {
+            name: 'NSString',
+            reference: 'NSString *'
+          },
+          name: 'kSubtypeSomeSubtype',
+          value: '@"SUBTYPE_SOME_SUBTYPE"',
+          memorySemantic: ObjC.MemorySemantic.UnsafeUnretained()
+        },
+        {
+          comments: [],
+          type: {
+            name: 'NSString',
+            reference: 'NSString *'
+          },
+          name: 'kSubtypeCoolSingleAttributeSubtype',
+          value: '@"SUBTYPE_COOL_SINGLE_ATTRIBUTE_SUBTYPE"',
+          memorySemantic: ObjC.MemorySemantic.UnsafeUnretained()
         }
       ];
-
       expect(staticConstants).toEqualJSON(expectedStaticConstants);
     });
   });

@@ -1367,15 +1367,14 @@ describe('AlgebraicTypePlugins.Description', function() {
         {
           belongsToProtocol:Maybe.Just('NSObject'),
           code: [
-            'switch (_subtype) {',
-            '  case _TestSubtypesSomeSubtype: {',
-            '    return [NSString stringWithFormat:@"%@ - SomeSubtype \\n\\t someString: %@; \\n\\t someUnsignedInteger: %tu; \\n", [super description], _someSubtype_someString, _someSubtype_someUnsignedInteger];',
-            '    break;',
-            '  }',
-            '  case _TestSubtypesCoolSingleAttributeBoolSubtype: {',
-            '    return [NSString stringWithFormat:@"%@ - \\n\\t coolSingleAttributeBoolSubtype: %@; \\n", [super description], _coolSingleAttributeBoolSubtype ? @"YES" : @"NO"];',
-            '    break;',
-            '  }',
+            'if([_subtype isEqualToString:kSubtypeSomeSubtype]) {',
+            '  return [NSString stringWithFormat:@"%@ - SomeSubtype \\n\\t someString: %@; \\n\\t someUnsignedInteger: %tu; \\n", [super description], _someSubtype_someString, _someSubtype_someUnsignedInteger];',
+            '}',
+            'else if([_subtype isEqualToString:kSubtypeCoolSingleAttributeBoolSubtype]) {',
+            '  return [NSString stringWithFormat:@"%@ - \\n\\t coolSingleAttributeBoolSubtype: %@; \\n", [super description], _coolSingleAttributeBoolSubtype ? @"YES" : @"NO"];',
+            '}',
+            'else {',
+            '  @throw([NSException exceptionWithName:@"InvalidSubtypeException" reason:@"nil or unknown subtype provided" userInfo:@{@"subtype": _subtype}]);',
             '}'
           ],
           comments: [],
